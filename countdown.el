@@ -18,15 +18,27 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Emacs-Countdown.  If not, see <https://www.gnu.org/licenses/>.
 
-
+(require 'seq)
+(require 'cl)
 
 ;; ------------------------------------------------------------
 ;; State of Emacs-Countdown
 (defvar countdown-timers nil)
 
+(defvar counter-idle-func nil) 
 
+(cl-defstruct
+    countdown-timer
+  description-str
+  start-date-time
+  end-date-time     
+  buffer)            ;; Buffer where countdown can be viewed
+  
 ;; ------------------------------------------------------------
 ;; Code
 
+(defun countdown-create (description start-t end-t)
+  "Create a new coundown object at conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running"
+  ())
 
 
