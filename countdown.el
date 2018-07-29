@@ -25,7 +25,7 @@
 ;; State of Emacs-Countdown
 (defvar countdown-timers-list '())
 
-(defvar counter-idle-func-timer nil) 
+(defvar countdown-idle-func-timer nil) 
 
 (cl-defstruct
     countdown-timer
@@ -46,13 +46,16 @@
     (setf (countdown-timer-buffer countdown) (generate-new-buffer "timer"))
     (setq countdown-timers-list
 	  (cons countdown countdown-timers-list))
-    (if (not counter-idle-func-timer)
-	(setq counter-idle-func-timer (run-with-idle-timer 1 t 'countdown-idle-func))
+    (if (not countdown-idle-func-timer)
+	(setq countdown-idle-func-timer (run-with-idle-timer 1 t 'countdown-idle-func))
       ())))
 
 (defun countdown-idle-func ()
   "Update state of all ongoing countdowns present in the countdown-timers-list"
-  (message "Running idle-func"))
+  (let ((curr-time (current-time)))
+    ())
+  (message "Running idle-func")
+  (message "%s" countdown-timers-list))
 
 (defun countdown-cancel-all ()
   "Cancels all running timers and kills the idle-func"
@@ -64,8 +67,24 @@
 ;; ------------------------------------------------------------
 ;; Interface functions
 
-(defun countdown-new (time-str)
+(defun countdown-new (description time-str)
   "Start a new timer given a string XX:YY:ZZ for XX hours, YY minutes, ZZ seconds"
-  ())
+  (let ((hms (split-string time-str ":")))
+    (if (not (= (length hms) 3))
+	(message "Error parsing time string")
+      (let* ((h (string-to-number (car hms)))
+	     (m (string-to-number (car (cdr hms))))
+	     (s (string-to-number (car (cdr (cdr hms)))))
+	     (countdown-seconds (+ (* 3600 h) (* 60 m) s))
+	     (curr-time (current-time))
+	     (end-time (time-add curr-time countdown-seconds)))
+	(countdown-create description curr-time end-time)))))
+	
+	
+	     
+	  
+	    
+	
+    
 
 
