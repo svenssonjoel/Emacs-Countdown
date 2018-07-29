@@ -50,8 +50,6 @@
 	(setq counter-idle-func-timer (run-with-idle-timer 1 t 'countdown-idle-func))
       ())))
 
-
-
 (defun countdown-idle-func ()
   "Update state of all ongoing countdowns present in the countdown-timers-list"
   (message "Running idle-func"))
@@ -61,4 +59,13 @@
   (setq countdown-timers-list '())
   (cancel-timer counter-idle-func-timer)
   (setq counter-idle-func-timer nil))
+
+
+;; ------------------------------------------------------------
+;; Interface functions
+
+(defun countdown-new (time-str)
+  "Start a new timer given a string XX:YY:ZZ for XX hours, YY minutes, ZZ seconds"
+  ())
+
 
