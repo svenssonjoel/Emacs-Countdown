@@ -25,7 +25,7 @@
 ;; State of Emacs-Countdown
 (defvar countdown-timers-list '())
 
-(defvar counter-idle-func nil) 
+(defvar counter-idle-func-timer nil) 
 
 (cl-defstruct
     countdown-timer
@@ -38,13 +38,27 @@
 ;; Code
 
 (defun countdown-create (description start-t end-t)
-  "Create a new coundown object at conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running"
+  "Create a new coundown object and conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running"
   (let ((countdown (make-countdown-timer)))
-    (setq (countdown-timer-description-str countdown) description)
-    (setq (countdown-timer-start-date-time countdown) start-t)
-    (setq (countdown-timer-end-date-time countdown) end-t)
-    (setq (countdown-timer-buffer countdown) (generate-new-buffer "timer"))
+    (setf (countdown-timer-description-str countdown) description)
+    (setf (countdown-timer-start-date-time countdown) start-t)
+    (setf (countdown-timer-end-date-time countdown) end-t)
+    (setf (countdown-timer-buffer countdown) (generate-new-buffer "timer"))
     (setq countdown-timers-list
-	  (cons countdown countdown-timers-list))))
+	  (cons countdown countdown-timers-list))
+    (if (not counter-idle-func-timer)
+	(setq counter-idle-func-timer (run-with-idle-timer 1 t 'countdown-idle-func))
+      ())))
 
+
+
+(defun countdown-idle-func ()
+  "Update state of all ongoing countdowns present in the countdown-timers-list"
+  (message "Running idle-func"))
+
+(defun countdown-cancel-all ()
+  "Cancels all running timers and kills the idle-func"
+  (setq countdown-timers-list '())
+  (cancel-timer counter-idle-func-timer)
+  (setq counter-idle-func-timer nil))
 
