@@ -23,7 +23,7 @@
 
 ;; ------------------------------------------------------------
 ;; State of Emacs-Countdown
-(defvar countdown-timers nil)
+(defvar countdown-timers-list '())
 
 (defvar counter-idle-func nil) 
 
@@ -39,6 +39,12 @@
 
 (defun countdown-create (description start-t end-t)
   "Create a new coundown object at conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running"
-  ())
+  (let ((countdown (make-countdown-timer)))
+    (setq (countdown-timer-description-str countdown) description)
+    (setq (countdown-timer-start-date-time countdown) start-t)
+    (setq (countdown-timer-end-date-time countdown) end-t)
+    (setq (countdown-timer-buffer countdown) (generate-new-buffer "timer"))
+    (setq countdown-timers-list
+	  (cons countdown countdown-timers-list))))
 
 
