@@ -47,15 +47,26 @@
     (setq countdown-timers-list
 	  (cons countdown countdown-timers-list))
     (if (not countdown-idle-func-timer)
-	(setq countdown-idle-func-timer (run-with-idle-timer 1 t 'countdown-idle-func))
+	(setq countdown-idle-func-timer (run-at-time t 1 'countdown-idle-func))
       ())))
 
 (defun countdown-idle-func ()
   "Update state of all ongoing countdowns present in the countdown-timers-list"
   (let ((curr-time (current-time)))
-    ())
+    (countdown-update-timers curr-time))
   (message "Running idle-func")
   (message "%s" countdown-timers-list))
+
+(defun countdown-update-timers (curr-time)
+  "update all countdowns"
+  (dolist (elt countdown-timers-list ())
+    (if (time-less-p (countdown-timer-end-date-time elt) curr-time)
+	(with-current-buffer (countdown-timer-buffer elt)
+	  (setf (buffer-string) "TIMEOUT!"))
+      (let ((time-left (time-subtract (countdown-timer-end-date-time elt) curr-time))) 
+	(with-current-buffer (countdown-timer-buffer elt)
+	  (setf (buffer-string) (format "%s" time-left)))))))
+	
 
 (defun countdown-cancel-all ()
   "Cancels all running timers and kills the idle-func"
