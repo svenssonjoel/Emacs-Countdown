@@ -25,7 +25,7 @@
 ;; State of Emacs-Countdown
 (defvar countdown-timers-list '())
 
-(defvar countdown-idle-func-timer nil) 
+(defvar countdown-func-timer nil) 
 
 (cl-defstruct
     countdown-timer
@@ -38,7 +38,7 @@
 ;; Code
 
 (defun countdown-create (description start-t end-t)
-  "Create a new coundown object and conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running"
+  "Create a new coundown object and conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running."
   (let ((countdown (make-countdown-timer)))
     (setf (countdown-timer-description-str countdown) description)
     (setf (countdown-timer-start-date-time countdown) start-t)
@@ -46,40 +46,54 @@
     (setf (countdown-timer-buffer countdown) (generate-new-buffer "timer"))
     (setq countdown-timers-list
 	  (cons countdown countdown-timers-list))
-    (if (not countdown-idle-func-timer)
-	(setq countdown-idle-func-timer (run-at-time t 1 'countdown-idle-func))
+    (if (not countdown-func-timer)
+	(setq countdown-func-timer (run-at-time t 1 'countdown-func))
       ())))
 
-(defun countdown-idle-func ()
-  "Update state of all ongoing countdowns present in the countdown-timers-list"
+(defun countdown-func ()
+  "Update state of all ongoing countdowns present in the countdown-timers-list."
   (let ((curr-time (current-time)))
-    (countdown-update-timers curr-time))
-  (message "Running idle-func")
-  (message "%s" countdown-timers-list))
+    (countdown-update-timers curr-time)))
+  ;;(message "Running idle-func")
+  ;;(message "%s" countdown-timers-list))
 
 (defun countdown-update-timers (curr-time)
-  "update all countdowns"
+  "Update all countdowns."
   (dolist (elt countdown-timers-list ())
     (if (time-less-p (countdown-timer-end-date-time elt) curr-time)
 	(with-current-buffer (countdown-timer-buffer elt)
 	  (setf (buffer-string) "TIMEOUT!"))
       (let ((time-left (time-subtract (countdown-timer-end-date-time elt) curr-time))) 
 	(with-current-buffer (countdown-timer-buffer elt)
-	  (setf (buffer-string) (format "%s" time-left)))))))
-	
+	  (setf (buffer-string) (countdown-generate-time-string time-left)))))))
 
+(defun countdown-generate-time-string (time)
+  "Turn a time-left value into a string." 
+  (let ((high (car time))
+	(low  (car (cdr time)))) ;; high * 2**16 + low = total number of seconds
+    (let ((secs-tot (+ (* (expt 2 16) high) low)))
+      (let ((hours (/ secs-tot 3600)) 
+	    (minutes (/ (mod secs-tot 3600) 60))
+	    (seconds (mod secs-tot 60)))
+	(format "%02d:%02d:%02d" hours minutes seconds)))))
+	    
+		     
+      
+ 
 (defun countdown-cancel-all ()
-  "Cancels all running timers and kills the idle-func"
+  "Cancels all running timers and killing associated buffers and the idle-func."
+  (dolist (elt countdown-timers-list ())
+    (kill-buffer (countdown-timer-buffer elt)))
   (setq countdown-timers-list '())
-  (cancel-timer counter-idle-func-timer)
-  (setq counter-idle-func-timer nil))
+  (cancel-timer countdown-func-timer)
+  (setq countdown-func-timer nil))
 
 
 ;; ------------------------------------------------------------
 ;; Interface functions
 
 (defun countdown-new (description time-str)
-  "Start a new timer given a string XX:YY:ZZ for XX hours, YY minutes, ZZ seconds"
+  "Start a new timer given a string XX:YY:ZZ for XX hours, YY minutes, ZZ seconds."
   (let ((hms (split-string time-str ":")))
     (if (not (= (length hms) 3))
 	(message "Error parsing time string")
