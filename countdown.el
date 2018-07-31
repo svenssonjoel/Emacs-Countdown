@@ -1,4 +1,4 @@
-;; countdown.el --- Specify and run benchmarks and collect data 
+;; countdown.el --- Keep track of time left with countdown timers. 
 
 ;; Copyright (C) 2018 
 ;; Author: Joel Svensson <svenssonjoel@yahoo.se> 
@@ -81,7 +81,7 @@
       
  
 (defun countdown-cancel-all ()
-  "Cancels all running timers and killing associated buffers and the idle-func."
+  "Cancels all running timers and kills associated buffers and the idle-func."
   (dolist (elt countdown-timers-list ())
     (kill-buffer (countdown-timer-buffer elt)))
   (setq countdown-timers-list '())
