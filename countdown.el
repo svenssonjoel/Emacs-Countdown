@@ -31,19 +31,21 @@
     countdown-timer
   description-str
   start-date-time
-  end-date-time     
+  end-date-time
+  action             ;; a function to execute on timeout 
   buffer)            ;; Buffer where countdown can be viewed
   
 ;; ------------------------------------------------------------
 ;; Code
 
-(defun countdown-create (description start-t end-t)
+(defun countdown-create (description start-t end-t action)
   "Create a new coundown object and conc it to countdown timers list. Also starts a idle timer function for timer updates if not already running."
   (let ((countdown (make-countdown-timer)))
     (setf (countdown-timer-description-str countdown) description)
     (setf (countdown-timer-start-date-time countdown) start-t)
     (setf (countdown-timer-end-date-time countdown) end-t)
     (setf (countdown-timer-buffer countdown) (generate-new-buffer "timer"))
+    (setf (countdown-timer-action countdown) action)
     (setq countdown-timers-list
 	  (cons countdown countdown-timers-list))
     (if (not countdown-func-timer)
@@ -54,15 +56,19 @@
   "Update state of all ongoing countdowns present in the countdown-timers-list."
   (let ((curr-time (current-time)))
     (countdown-update-timers curr-time)))
-  ;;(message "Running idle-func")
-  ;;(message "%s" countdown-timers-list))
 
 (defun countdown-update-timers (curr-time)
   "Update all countdowns."
   (dolist (elt countdown-timers-list ())
     (if (time-less-p (countdown-timer-end-date-time elt) curr-time)
-	(with-current-buffer (countdown-timer-buffer elt)
-	  (setf (buffer-string) "TIMEOUT!"))
+	(progn 
+	  (with-current-buffer (countdown-timer-buffer elt)
+	    (setf (buffer-string) "TIMEOUT!"))
+	  (if (countdown-timer-action elt)
+	      (progn (funcall (countdown-timer-action elt))
+		     (setf (countdown-timer-action elt) nil)))
+	    
+	    ())
       (let ((time-left (time-subtract (countdown-timer-end-date-time elt) curr-time))) 
 	(with-current-buffer (countdown-timer-buffer elt)
 	  (setf (buffer-string) (countdown-generate-time-string time-left)))))))
@@ -92,7 +98,7 @@
 ;; ------------------------------------------------------------
 ;; Interface functions
 
-(defun countdown-new (description time-str)
+(defun countdown-new (description time-str &optional action)
   "Start a new timer given a string XX:YY:ZZ for XX hours, YY minutes, ZZ seconds."
   (let ((hms (split-string time-str ":")))
     (if (not (= (length hms) 3))
@@ -103,11 +109,8 @@
 	     (countdown-seconds (+ (* 3600 h) (* 60 m) s))
 	     (curr-time (current-time))
 	     (end-time (time-add curr-time countdown-seconds)))
-	(countdown-create description curr-time end-time)))))
-	
-	
-	     
-	  
+	(countdown-create description curr-time end-time action)))))
+
 	    
 	
     
